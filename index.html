@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>חיפוש פריטים במחסן</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* App Container */
+        .container {
+            max-width: 450px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Header */
+        h2 {
+            color: #333;
+            font-size: 22px;
+        }
+
+        /* Input Field */
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        /* Search Button */
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 18px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        /* Results Container */
+        #result {
+            margin-top: 20px;
+        }
+
+        /* Result Cards */
+        .card {
+            background: white;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 10px;
+            box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.1);
+            text-align: right;
+            direction: rtl;
+        }
+
+        /* Highlight Headers */
+        .card h4 {
+            margin-bottom: 8px;
+            font-size: 18px;
+            color: #007bff;
+        }
+
+        /* Product Info */
+        .card p {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+        /* Footer */
+#footer {
+    margin-top: 30px;
+    text-align: center;
+    font-size: 14px;
+    color: #555;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>🔍 חיפוש פריט במחסן</h2>
+        <input type="text" id="itemNumber" placeholder="הכנס מספר פריט">
+        <button onclick="fetchItem()">חפש</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function fetchItem() {
+            var itemNumber = document.getElementById("itemNumber").value.trim();
+            var resultDiv = document.getElementById("result");
+
+            // Clear previous results
+            resultDiv.style.display = "none";
+            resultDiv.innerHTML = "";
+
+            if (itemNumber === "") {
+                alert("❌ יש להזין מספר פריט!");
+                return;
+            }
+
+            var url = "https://script.google.com/macros/s/AKfycbxtZUFab-yt6l_zERUnQSf2bBCl4dQ5PIA9h3CSjsPoWJhwUZVpGZD-qL12g4wnE8Ms/exec?item=" + encodeURIComponent(itemNumber);
+
+            // Show loading text while fetching
+            resultDiv.style.display = "block";
+            resultDiv.innerHTML = "<strong>⏳ מחפש נתונים...</strong>";
+
+            fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    resultDiv.innerHTML = `<strong>❌ ${data.error}</strong>`;
+                } else {
+                    let resultsHTML = `<h3>📦 תוצאות חיפוש (${data.length})</h3>`;
+
+                    // If multiple results exist, loop through them
+                    if (Array.isArray(data)) {
+                        data.forEach((item, index) => {
+                            resultsHTML += `
+                                <div class="card">
+                                    <h4>🔹 תוצאה ${index + 1}</h4>
+                                    <p><strong>🆔 מק"ט:</strong> ${item["מקט"]}</p>
+                                    <p><strong>🔢 מספר פריט:</strong> ${item["מספר פריט"]}</p>
+                                    <p><strong>🏬 מספר חנות:</strong> ${item["מספר חנות"]}</p>
+                                    <p><strong>📌 שם מוצר:</strong> ${item["שם מוצר"]}</p>
+                                    <p><strong>📂 קטגוריה:</strong> ${item["קטגוריה"]}</p>
+                                    <p><strong>📏 מידות:</strong> ${item["מידות"]}</p>
+                                    <p><strong>🎨 צבעים:</strong> ${item["צבעים"]}</p>
+                                    <p><strong>➗ כמות ליחידה:</strong> ${(item["כמות קרטונים"] / item["כמות פריטים"]).toFixed(2)}</p>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        resultsHTML += `
+                            <div class="card">
+                                <p><strong>🆔 מק"ט:</strong> ${data["מקט"]}</p>
+                                <p><strong>🔢 מספר פריט:</strong> ${data["מספר פריט"]}</p>
+                                <p><strong>🏬 מספר חנות:</strong> ${data["מספר חנות"]}</p>
+                                <p><strong>📌 שם מוצר:</strong> ${data["שם מוצר"]}</p>
+                                <p><strong>📂 קטגוריה:</strong> ${data["קטגוריה"]}</p>
+                                <p><strong>📏 מידות:</strong> ${data["מידות"]}</p>
+                                <p><strong>🎨 צבעים:</strong> ${data["צבעים"]}</p>
+                                <p><strong>➗ כמות ליחידה:</strong> ${(data["כמות קרטונים"] / data["כמות פריטים"]).toFixed(2)}</p>
+                            </div>
+                        `;
+                    }
+
+                    resultDiv.innerHTML = resultsHTML;
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                resultDiv.innerHTML = "<strong>❌ שגיאה בשליפת הנתונים</strong>";
+            });
+        }
+    </script>
+    <div id="footer">
+        <p>Built by <strong>KaspaCasa@Moshe</strong></p>
+    </div>
+
+</body>
+</html>
