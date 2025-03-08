@@ -174,41 +174,52 @@
         }
 
         // 📦 Fetch Orders Function
-        async function fetchOrders() {
-            try {
-                let response = await fetch(`${API_URL}?type=orders`);
-                let orders = await response.json();
-                let ordersContainer = document.getElementById("ordersContainer");
-                ordersContainer.innerHTML = "";
+     async function fetchOrders() {
+    try {
+        let response = await fetch(`${API_URL}?type=orders`);
+        let text = await response.text(); // Get raw response as text
+        console.log("🔍 Raw API Response:", text); // Debugging
 
-                if (orders.length === 0) {
-                    ordersContainer.innerHTML = "<p>🚫 אין הזמנות להצגה.</p>";
-                    return;
-                }
+        let orders = JSON.parse(text); // Convert to JSON
 
-                orders.forEach(order => {
-                    let orderDiv = document.createElement("div");
-                    orderDiv.classList.add("order-container");
-
-                    orderDiv.innerHTML = `
-                        <h3>🔢 הזמנה #${order.orderID} - ${order.orderDate}</h3>
-                        <p><strong>📦 מוצר:</strong> ${order.productName} (#${order.itemNumber})</p>
-                        <p><strong>🔢 כמות:</strong> ${order.quantity}</p>
-                        <p><strong>👤 לקוח:</strong> ${order.customerName}</p>
-                        <p><strong>📞 טלפון:</strong> ${order.phone}</p>
-                        <p><strong>📍 כתובת:</strong> ${order.shippingAddress}</p>
-                        <p><strong>📝 הערות:</strong> ${order.notes}</p>
-                        <p><strong>🚚 סטטוס:</strong> ${order.status}</p>
-                    `;
-
-                    ordersContainer.appendChild(orderDiv);
-                });
-
-            } catch (error) {
-                console.error("❌ שגיאה בשליפת ההזמנות:", error);
-                document.getElementById("ordersContainer").innerHTML = "<p>שגיאה בטעינת ההזמנות.</p>";
-            }
+        if (!Array.isArray(orders)) {
+            console.error("❌ Error: Expected an array but got:", orders);
+            document.getElementById("ordersContainer").innerHTML = "<p>❌ שגיאה: הנתונים שהתקבלו אינם תקינים.</p>";
+            return;
         }
+
+        let ordersContainer = document.getElementById("ordersContainer");
+        ordersContainer.innerHTML = "";
+
+        if (orders.length === 0) {
+            ordersContainer.innerHTML = "<p>🚫 אין הזמנות להצגה.</p>";
+            return;
+        }
+
+        orders.forEach(order => {
+            let orderDiv = document.createElement("div");
+            orderDiv.classList.add("order-container");
+
+            orderDiv.innerHTML = `
+                <h3>🔢 הזמנה #${order.orderID} - ${order.orderDate}</h3>
+                <p><strong>📦 מוצר:</strong> ${order.productName} (#${order.itemNumber})</p>
+                <p><strong>🔢 כמות:</strong> ${order.quantity}</p>
+                <p><strong>👤 לקוח:</strong> ${order.customerName}</p>
+                <p><strong>📞 טלפון:</strong> ${order.phone}</p>
+                <p><strong>📍 כתובת:</strong> ${order.shippingAddress}</p>
+                <p><strong>📝 הערות:</strong> ${order.notes}</p>
+                <p><strong>🚚 סטטוס:</strong> ${order.status}</p>
+            `;
+
+            ordersContainer.appendChild(orderDiv);
+        });
+
+    } catch (error) {
+        console.error("❌ שגיאה בשליפת ההזמנות:", error);
+        document.getElementById("ordersContainer").innerHTML = "<p>❌ שגיאה בטעינת ההזמנות.</p>";
+    }
+}
+
 
         showPage("searchPage", document.getElementById("btnItems")); // Default page
     </script>
