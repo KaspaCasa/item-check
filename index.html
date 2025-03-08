@@ -1,187 +1,129 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html lang="he">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>חיפוש פריטים במחסן</title>
+    <title>Kaspa Casa - ניהול הזמנות</title>
     <style>
-        /* General Styles */
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            margin: 0;
-            padding: 20px;
-            text-align: center;
-        }
-
-        /* App Container */
-        .container {
-            max-width: 450px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Header */
-        h2 {
-            color: #333;
-            font-size: 22px;
-        }
-
-        /* Input Field */
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-
-        /* Search Button */
-        button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            font-size: 18px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        button:hover {
-            background: #0056b3;
-        }
-
-        /* Results Container */
-        #result {
-            margin-top: 20px;
-        }
-
-        /* Result Cards */
-        .card {
-            background: white;
-            padding: 15px;
-            margin-top: 10px;
-            border-radius: 10px;
-            box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.1);
-            text-align: right;
-            direction: rtl;
-        }
-
-        /* Highlight Headers */
-        .card h4 {
-            margin-bottom: 8px;
-            font-size: 18px;
-            color: #007bff;
-        }
-
-        /* Product Info */
-        .card p {
-            font-size: 16px;
-            margin: 5px 0;
-        }
-        /* Footer */
-#footer {
-    margin-top: 30px;
-    text-align: center;
-    font-size: 14px;
-    color: #555;
-    padding: 10px;
-    background: #f8f9fa;
-    border-radius: 5px;
-    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-}
-
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f4; direction: rtl; }
+        h1 { color: #333; }
+        .menu { background: #333; padding: 10px; display: flex; justify-content: center; }
+        .menu button { background: white; border: none; padding: 10px 15px; margin: 5px; cursor: pointer; font-size: 16px; }
+        .menu button:hover { background: #ddd; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); margin-top: 15px; }
+        .order-container { padding: 10px; border-bottom: 1px solid #ddd; text-align: right; }
+        .hidden { display: none; }
+        input { padding: 8px; width: 80%; margin-top: 10px; }
+        button { padding: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2>🔍 חיפוש פריט במחסן</h2>
-        <input type="text" id="itemNumber" placeholder="הכנס מספר פריט">
-        <button onclick="fetchItem()">חפש</button>
-        <div id="result"></div>
+    <h1>📦 ניהול הזמנות - Kaspa Casa</h1>
+    
+    <!-- 🔹 Menu Navigation -->
+    <div class="menu">
+        <button onclick="showPage('searchPage')">🔍 חיפוש פריטים</button>
+        <button onclick="showPage('ordersPage')">📦 הזמנות</button>
+    </div>
+
+    <!-- 🔹 Search Page -->
+    <div id="searchPage" class="container">
+        <h2>🔍 חיפוש פריטים</h2>
+        <input type="text" id="itemInput" placeholder="הזן מספר פריט...">
+        <button onclick="searchItem()">חפש</button>
+        <div id="itemResult"></div>
+    </div>
+
+    <!-- 🔹 Orders Page -->
+    <div id="ordersPage" class="container hidden">
+        <h2>📦 רשימת הזמנות</h2>
+        <div id="ordersContainer">🔄 טוען הזמנות...</div>
     </div>
 
     <script>
-        function fetchItem() {
-            var itemNumber = document.getElementById("itemNumber").value.trim();
-            var resultDiv = document.getElementById("result");
+        const API_ITEMS = "YOUR_ITEMS_SCRIPT_URL_HERE"; // 🔹 Replace with your items script URL
+        const API_ORDERS = "YOUR_ORDERS_SCRIPT_URL_HERE"; // 🔹 Replace with your orders script URL
 
-            // Clear previous results
-            resultDiv.style.display = "none";
-            resultDiv.innerHTML = "";
+        function showPage(page) {
+            document.getElementById("searchPage").classList.add("hidden");
+            document.getElementById("ordersPage").classList.add("hidden");
+            document.getElementById(page).classList.remove("hidden");
+            
+            if (page === "ordersPage") fetchOrders(); // Load orders when switching
+        }
 
-            if (itemNumber === "") {
-                alert("❌ יש להזין מספר פריט!");
+        // 🔍 Search Item Function
+        async function searchItem() {
+            let itemNumber = document.getElementById("itemInput").value;
+            if (!itemNumber) {
+                alert("אנא הזן מספר פריט.");
                 return;
             }
 
-            var url = "https://script.google.com/macros/s/AKfycbxtZUFab-yt6l_zERUnQSf2bBCl4dQ5PIA9h3CSjsPoWJhwUZVpGZD-qL12g4wnE8Ms/exec?item=" + encodeURIComponent(itemNumber);
+            try {
+                let response = await fetch(`${API_ITEMS}?item=${itemNumber}`);
+                let data = await response.json();
 
-            // Show loading text while fetching
-            resultDiv.style.display = "block";
-            resultDiv.innerHTML = "<strong>⏳ מחפש נתונים...</strong>";
-
-            fetch(url)
-            .then(response => response.json())
-            .then(data => {
+                let resultDiv = document.getElementById("itemResult");
                 if (data.error) {
-                    resultDiv.innerHTML = `<strong>❌ ${data.error}</strong>`;
+                    resultDiv.innerHTML = `<p style="color:red;">❌ ${data.error}</p>`;
                 } else {
-                    let resultsHTML = `<h3>📦 תוצאות חיפוש (${data.length})</h3>`;
-
-                    // If multiple results exist, loop through them
-                    if (Array.isArray(data)) {
-                        data.forEach((item, index) => {
-                            resultsHTML += `
-                                <div class="card">
-                                    <h4>🔹 תוצאה ${index + 1}</h4>
-                                    <p><strong>🆔 מק"ט:</strong> ${item["מקט"]}</p>
-                                    <p><strong>🔢 מספר פריט:</strong> ${item["מספר פריט"]}</p>
-                                    <p><strong>🏬 מספר חנות:</strong> ${item["מספר חנות"]}</p>
-                                    <p><strong>📌 שם מוצר:</strong> ${item["שם מוצר"]}</p>
-                                    <p><strong>📂 קטגוריה:</strong> ${item["קטגוריה"]}</p>
-                                    <p><strong>📏 מידות:</strong> ${item["מידות"]}</p>
-                                    <p><strong>🎨 צבעים:</strong> ${item["צבעים"]}</p>
-                                    <p><strong>➗ כמות קרטונים:</strong> ${(item["כמות קרטונים"] / item["כמות פריטים"]).toFixed(2)}</p>
-                                </div>
-                            `;
-                        });
-                    } else {
-                        resultsHTML += `
-                            <div class="card">
-                                <p><strong>🆔 מק"ט:</strong> ${data["מקט"]}</p>
-                                <p><strong>🔢 מספר פריט:</strong> ${data["מספר פריט"]}</p>
-                                <p><strong>🏬 מספר חנות:</strong> ${data["מספר חנות"]}</p>
-                                <p><strong>📌 שם מוצר:</strong> ${data["שם מוצר"]}</p>
-                                <p><strong>📂 קטגוריה:</strong> ${data["קטגוריה"]}</p>
-                                <p><strong>📏 מידות:</strong> ${data["מידות"]}</p>
-                                <p><strong>🎨 צבעים:</strong> ${data["צבעים"]}</p>
-                                <p><strong>➗ כמות קרטונים:</strong> ${(data["כמות קרטונים"] / data["כמות פריטים"]).toFixed(2)}</p>
-                            </div>
-                        `;
-                    }
-
-                    resultDiv.innerHTML = resultsHTML;
+                    resultDiv.innerHTML = `
+                        <h3>📦 פרטי פריט</h3>
+                        <p><strong>🔢 מספר פריט:</strong> ${data["מספר פריט"]}</p>
+                        <p><strong>🏬 מספר חנות:</strong> ${data["מספר חנות"]}</p>
+                        <p><strong>📌 שם מוצר:</strong> ${data["שם מוצר"]}</p>
+                        <p><strong>📂 קטגוריה:</strong> ${data["קטגוריה"]}</p>
+                        <p><strong>📏 מידות:</strong> ${data["מידות"]}</p>
+                        <p><strong>🎨 צבעים:</strong> ${data["צבעים"]}</p>
+                        <p><strong>📦 כמות קרטונים:</strong> ${data["כמות קרטונים"]}</p>
+                    `;
                 }
-            })
-            .catch(error => {
-                console.error("Error:", error);
-                resultDiv.innerHTML = "<strong>❌ שגיאה בשליפת הנתונים</strong>";
-            });
+            } catch (error) {
+                console.error("❌ שגיאה בשליפת הנתונים:", error);
+            }
         }
+
+        // 📦 Fetch Orders Function
+        async function fetchOrders() {
+            try {
+                let response = await fetch(API_ORDERS);
+                let orders = await response.json();
+                let ordersContainer = document.getElementById("ordersContainer");
+                ordersContainer.innerHTML = "";
+
+                if (orders.length === 0) {
+                    ordersContainer.innerHTML = "<p>🚫 אין הזמנות להצגה.</p>";
+                    return;
+                }
+
+                orders.forEach(order => {
+                    let orderDiv = document.createElement("div");
+                    orderDiv.classList.add("order-container");
+
+                    orderDiv.innerHTML = `
+                        <h3>🔢 הזמנה #${order.orderID} - ${order.orderDate}</h3>
+                        <p><strong>📦 מוצר:</strong> ${order.productName} (#${order.itemNumber})</p>
+                        <p><strong>🔢 כמות:</strong> ${order.quantity}</p>
+                        <p><strong>👤 לקוח:</strong> ${order.customerName}</p>
+                        <p><strong>📞 טלפון:</strong> ${order.phone}</p>
+                        <p><strong>📍 כתובת:</strong> ${order.shippingAddress}</p>
+                        <p><strong>📝 הערות:</strong> ${order.notes}</p>
+                        <p><strong>🚚 סטטוס:</strong> ${order.status}</p>
+                    `;
+
+                    ordersContainer.appendChild(orderDiv);
+                });
+
+            } catch (error) {
+                console.error("❌ שגיאה בשליפת ההזמנות:", error);
+                document.getElementById("ordersContainer").innerHTML = "<p>שגיאה בטעינת ההזמנות.</p>";
+            }
+        }
+
+        showPage("searchPage"); // Load default page on startup
     </script>
-    <div id="footer">
-        <p>Built by <strong>KaspaCasa@Moshe</strong></p>
-    </div>
 
 </body>
 </html>
