@@ -3,28 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kaspa Casa - ניהול הזמנות</title>
+    <title>Kaspa Casa - ניהול</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f4; direction: rtl; }
-        h1 { color: #333; }
-        .menu { background: #333; padding: 10px; display: flex; justify-content: center; }
-        .menu button { background: white; border: none; padding: 10px 15px; margin: 5px; cursor: pointer; font-size: 16px; }
-        .menu button:hover { background: #ddd; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); margin-top: 15px; }
-        .order-container { padding: 10px; border-bottom: 1px solid #ddd; text-align: right; }
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            background-color: #f8f9fa; 
+            margin: 0; 
+            padding: 0; 
+            direction: rtl;
+        }
+
+        h1 { color: #333; margin-bottom: 10px; font-size: 22px; }
+
+        /* 🔹 Navigation Bar */
+        .menu {
+            background: #333;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .menu button {
+            background: white;
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 50%;
+        }
+
+        .menu button.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .container {
+            max-width: 500px; 
+            margin: 70px auto 20px; 
+            background: white; 
+            padding: 15px; 
+            border-radius: 10px; 
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: right;
+        }
+
         .hidden { display: none; }
-        input { padding: 8px; width: 80%; margin-top: 10px; }
-        button { padding: 8px; cursor: pointer; }
+
+        /* 🔹 Inputs & Buttons */
+        input, button {
+            width: 100%; 
+            padding: 12px;
+            margin-top: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover { background: #0056b3; }
+
+        /* 🔹 Order Styling */
+        .order-container {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: right;
+            background: #f9f9f9;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .order-container h3 { font-size: 18px; color: #333; margin-bottom: 5px; }
+
+        .order-container p {
+            margin: 3px 0;
+            font-size: 14px;
+            color: #555;
+        }
+
+        /* 🔹 Loader */
+        .loader {
+            text-align: center;
+            font-size: 16px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
 
-    <h1>📦 ניהול הזמנות - Kaspa Casa</h1>
-    
-    <!-- 🔹 Menu Navigation -->
+    <h1>📦 ניהול Kaspa Casa</h1>
+
+    <!-- 🔹 Navigation Menu -->
     <div class="menu">
-        <button onclick="showPage('searchPage')">🔍 חיפוש פריטים</button>
-        <button onclick="showPage('ordersPage')">📦 הזמנות</button>
+        <button id="btnItems" class="active" onclick="showPage('searchPage', this)">🔍 חיפוש פריטים</button>
+        <button id="btnOrders" onclick="showPage('ordersPage', this)">📦 הזמנות</button>
     </div>
 
     <!-- 🔹 Search Page -->
@@ -38,19 +121,24 @@
     <!-- 🔹 Orders Page -->
     <div id="ordersPage" class="container hidden">
         <h2>📦 רשימת הזמנות</h2>
-        <div id="ordersContainer">🔄 טוען הזמנות...</div>
+        <div id="ordersContainer" class="loader">🔄 טוען הזמנות...</div>
     </div>
 
     <script>
-        const API_ITEMS = "YOUR_ITEMS_SCRIPT_URL_HERE"; // 🔹 Replace with your items script URL
-        const API_ORDERS = "YOUR_ORDERS_SCRIPT_URL_HERE"; // 🔹 Replace with your orders script URL
+        const API_URL = "https://script.google.com/macros/s/AKfycbwdCdLvRZop5KOCjrgklfsv8qKq1Gbe-MRntIMfnzODNUhrCKe5DGiC-5CSNEg59jzJ/exec"; // 🔹 Use the same URL for both
 
-        function showPage(page) {
+        function showPage(page, btn) {
             document.getElementById("searchPage").classList.add("hidden");
             document.getElementById("ordersPage").classList.add("hidden");
+
             document.getElementById(page).classList.remove("hidden");
-            
-            if (page === "ordersPage") fetchOrders(); // Load orders when switching
+
+            document.getElementById("btnItems").classList.remove("active");
+            document.getElementById("btnOrders").classList.remove("active");
+
+            btn.classList.add("active");
+
+            if (page === "ordersPage") fetchOrders();
         }
 
         // 🔍 Search Item Function
@@ -62,7 +150,7 @@
             }
 
             try {
-                let response = await fetch(`${API_ITEMS}?item=${itemNumber}`);
+                let response = await fetch(`${API_URL}?type=item&item=${itemNumber}`);
                 let data = await response.json();
 
                 let resultDiv = document.getElementById("itemResult");
@@ -88,7 +176,7 @@
         // 📦 Fetch Orders Function
         async function fetchOrders() {
             try {
-                let response = await fetch(API_ORDERS);
+                let response = await fetch(`${API_URL}?type=orders`);
                 let orders = await response.json();
                 let ordersContainer = document.getElementById("ordersContainer");
                 ordersContainer.innerHTML = "";
@@ -122,7 +210,7 @@
             }
         }
 
-        showPage("searchPage"); // Load default page on startup
+        showPage("searchPage", document.getElementById("btnItems")); // Default page
     </script>
 
 </body>
