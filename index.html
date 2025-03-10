@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kaspa Casa - ניהול</title>
+    <title>מערכת ניהול - Kaspa Casa</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -14,7 +14,26 @@
             direction: rtl;
         }
 
-        h1 { color: #333; margin-bottom: 10px; font-size: 22px; }
+        /* 🔹 Header with Logo */
+        .header {
+            background: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .header img {
+            height: 50px;
+            margin-left: 15px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            margin: 0;
+            color: #333;
+        }
 
         /* 🔹 Navigation Bar */
         .menu {
@@ -22,9 +41,8 @@
             display: flex;
             justify-content: space-around;
             padding: 10px 0;
-            position: fixed;
             width: 100%;
-            top: 0;
+            top: 80px; /* Adjusted for header */
             left: 0;
             z-index: 1000;
         }
@@ -36,6 +54,8 @@
             font-size: 16px;
             cursor: pointer;
             width: 50%;
+            color: black; /* Updated text color */
+            font-weight: bold;
         }
 
         .menu button.active {
@@ -45,7 +65,7 @@
 
         .container {
             max-width: 500px; 
-            margin: 70px auto 20px; 
+            margin: 130px auto 20px; /* Adjusted for new header */
             background: white; 
             padding: 15px; 
             border-radius: 10px; 
@@ -76,6 +96,7 @@
 
         /* 🔹 Order Styling */
         .order-container {
+            margin-top: 10px;
             padding: 12px;
             border-bottom: 1px solid #ddd;
             text-align: right;
@@ -101,9 +122,12 @@
     </style>
 </head>
 <body>
-
-    <h1>📦 ניהול Kaspa Casa</h1>
-
+    <!-- 🔹 Header with Logo -->
+    <div class="header">
+         <img src="https://github.com/KaspaCasa/item-check/blob/main/FINAL%20%D7%A7%D7%91%D7%A6%D7%99%D7%9D-1%20copy.jpg" alt="Kaspa Casa Logo" width="150">
+         <!-- Change to correct logo URL -->
+        <h1>מערכת ניהול - Kaspa Casa</h1>
+    </div>
     <!-- 🔹 Navigation Menu -->
     <div class="menu">
         <button id="btnItems" class="active" onclick="showPage('searchPage', this)">🔍 חיפוש פריטים</button>
@@ -118,11 +142,21 @@
         <div id="itemResult"></div>
     </div>
 
-    <!-- 🔹 Orders Page -->
-    <div id="ordersPage" class="container hidden">
-        <h2>📦 רשימת הזמנות</h2>
-        <div id="ordersContainer" class="loader">🔄 טוען הזמנות...</div>
-    </div>
+<!-- 🔹 Orders Page -->
+<div id="ordersPage" class="container hidden">
+    <h2>📦 רשימת הזמנות</h2>
+
+    <!-- 🔹 Filter Dropdown -->
+    <label for="orderFilter">🔍 סנן לפי סטטוס:</label>
+    <select id="orderFilter" onchange="filterOrders()">
+        <option value="all">📋 הצג הכל</option>
+        <option value="Pending">⏳ חדש</option>
+        <option value="In Work">🛠 בעבודה</option>
+        <option value="Complete">✅ הושלם</option>
+    </select>
+
+    <div id="ordersContainer" class="loader">🔄 טוען הזמנות...</div>
+</div>
 
     <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbzdBhte1XIT5NH8KsZZsFu61lBzQFm87a9y9ANSWWN1pK5XQ8CaS6lQNUZVaI3RXHA6/exec";
@@ -181,6 +215,8 @@ async function searchItem() {
     }
 }
 
+let allOrders = []; // Store all orders for filtering
+
 async function fetchOrders() {
     try {
         let response = await fetch(`${API_URL}?type=orders`);
@@ -194,44 +230,49 @@ async function fetchOrders() {
             return;
         }
 
-        let ordersContainer = document.getElementById("ordersContainer");
-        ordersContainer.innerHTML = "";
-
-        if (orders.length === 0) {
-            ordersContainer.innerHTML = "<p>🚫 אין הזמנות להצגה.</p>";
-            return;
-        }
-
-        orders.forEach(order => {
-            let orderDiv = document.createElement("div");
-            orderDiv.classList.add("order-container");
-
-            let statusOptions = `
-                <select onchange="updateOrderStatus('${order.orderID}', this.value)">
-                    <option value="Pending" ${order.status === "Pending" ? "selected" : ""}>⏳ ממתין</option>
-                    <option value="In Work" ${order.status === "In Work" ? "selected" : ""}>⚙️ בטיפול</option>
-                    <option value="Complete" ${order.status === "Complete" ? "selected" : ""}>✅ הושלם</option>
-                </select>
-            `;
-
-            orderDiv.innerHTML = `
-                <h3>🔢 הזמנה #${order.orderID} - ${order.orderDate}</h3>
-                <p><strong>📦 מוצר:</strong> ${order.productName} (#${order.itemNumber})</p>
-                <p><strong>🔢 כמות:</strong> ${order.quantity}</p>
-                <p><strong>👤 לקוח:</strong> ${order.customerName}</p>
-                <p><strong>📞 טלפון:</strong> ${order.phone}</p>
-                <p><strong>📍 כתובת:</strong> ${order.shippingAddress}</p>
-                <p><strong>📝 הערות:</strong> ${order.notes}</p>
-                <p><strong>🚚 סטטוס:</strong> ${statusOptions}</p>
-            `;
-
-            ordersContainer.appendChild(orderDiv);
-        });
+        allOrders = orders; // Store for filtering
+        displayOrders(orders); // Display all initially
 
     } catch (error) {
         console.error("❌ שגיאה בשליפת ההזמנות:", error);
         document.getElementById("ordersContainer").innerHTML = "<p>❌ שגיאה בטעינת ההזמנות.</p>";
     }
+}
+
+// 🔹 Function to Filter Orders
+function filterOrders() {
+    let selectedStatus = document.getElementById("orderFilter").value;
+    let filteredOrders = selectedStatus === "all" ? allOrders : allOrders.filter(order => order.status === selectedStatus);
+    displayOrders(filteredOrders);
+}
+
+// 🔹 Function to Display Orders
+function displayOrders(orders) {
+    let ordersContainer = document.getElementById("ordersContainer");
+    ordersContainer.innerHTML = "";
+
+    if (orders.length === 0) {
+        ordersContainer.innerHTML = "<p>🚫 אין הזמנות להצגה.</p>";
+        return;
+    }
+
+    orders.forEach(order => {
+        let orderDiv = document.createElement("div");
+        orderDiv.classList.add("order-container");
+
+        orderDiv.innerHTML = `
+            <h3>🔢 הזמנה #${order.orderID} - ${order.orderDate}</h3>
+            <p><strong>📦 מוצר:</strong> ${order.productName} (#${order.itemNumber})</p>
+            <p><strong>🔢 כמות:</strong> ${order.quantity}</p>
+            <p><strong>👤 לקוח:</strong> ${order.customerName}</p>
+            <p><strong>📞 טלפון:</strong> ${order.phone}</p>
+            <p><strong>📍 כתובת:</strong> ${order.shippingAddress}</p>
+            <p><strong>📝 הערות:</strong> ${order.notes}</p>
+            <p><strong>🚚 סטטוס:</strong> ${order.status}</p>
+        `;
+
+        ordersContainer.appendChild(orderDiv);
+    });
 }
 
 async function updateOrderStatus(orderID, newStatus) {
